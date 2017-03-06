@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head lang="en">
+    <meta charset="UTF-8" />
+    <title>Интеграция Calltracking и AmoCRM</title>
+</head>
+<body>
+    <p>Система интеграции Calltracking и AmoCRM.</p>
+    <p><a href="https://calltracking.ru/">Calltracking.ru</a></p>
+    <p><a href="http://www.amocrm.ru/">AmoCRM.ru</a></p>
+
+
+    <!--table border="1"-->
+        <!--@thymesVar id="rows" type="com.callsintegration.calltracking.CallTrackingWebsiteSource"-->
+        <!--tr>
+            <th>id</th>
+            <th>Название РК</th>
+            <th>utm_source</th>
+            <th>utm_medium</th>
+            <th>utm_campaign</th>
+            <th>project_id</th>
+            <th>truth</th>
+            <th>phones_count</th>
+        </tr>
+        <tr th:each="row : ${rows}">
+            <td th:text="${row.id}" />
+            <td th:text="${row.sourceName}" />
+            <td th:text="${row.utmSource}" />
+            <td th:text="${row.utmMedium}" />
+            <td th:text="${row.utmCampaign}" />
+            <td th:text="${row.projectId}" />
+            <td th:text="${row.truth}" />
+            <td th:text="${row.phonesCount}" />
+        </tr>
+     </table-->
+    <h1>Code: <!--@thymesVar id="code" type="String"-->
+    <span th:text="${code}" /></h1>
+    <h1>Domain: <!--@thymesVar id="domain" type="String"-->
+    <span th:text="${domain}" /></h1>
+</body>
+</html>
