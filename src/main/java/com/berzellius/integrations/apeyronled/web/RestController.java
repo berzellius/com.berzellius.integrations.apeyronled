@@ -1,8 +1,12 @@
 package com.berzellius.integrations.apeyronled.web;
 
-import com.berzellius.integrations.apeyronled.dto.TestRequest;
-import com.berzellius.integrations.apeyronled.dto.TestResult;
+import com.berzellius.integrations.apeyronled.businesslogic.processes.CallsService;
+import com.berzellius.integrations.apeyronled.businesslogic.processes.LeadsFromSiteService;
+import com.berzellius.integrations.apeyronled.dto.site.CallRequest;
+import com.berzellius.integrations.apeyronled.dto.site.LeadRequest;
+import com.berzellius.integrations.apeyronled.dto.site.Result;
 import javassist.NotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -15,6 +19,26 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("/rest/")
 public class RestController extends BaseController {
 
+    @Autowired
+    LeadsFromSiteService leadsFromSiteService;
+
+    @Autowired
+    CallsService callsService;
+
+    @RequestMapping(
+            value = "lead_from_site",
+            method = RequestMethod.POST,
+            consumes="application/json",
+            produces="application/json"
+    )
+    @ResponseBody
+    public Result newLeadFromSite(
+            @RequestBody
+            LeadRequest leadRequest
+    ){
+        return leadsFromSiteService.newLeadFromSite(leadRequest.getLeads(), leadRequest.getOrigin(), leadRequest.getPassword());
+    }
+
     @RequestMapping(
             value = "call_webhook",
             method = RequestMethod.POST,
@@ -22,16 +46,13 @@ public class RestController extends BaseController {
             produces="application/json"
     )
     @ResponseBody
-    public TestResult newCallWebhook(
+    public Result newCallWebhook(
             @RequestBody
-            TestRequest testRequest
+            CallRequest callRequest
     ) throws NotFoundException {
-        System.out.println("test! " + testRequest.getRequest());
+        //System.out.println("webhook! " + callRequest.toString());
         //throw new NotFoundException("out of service!");
-        TestResult testResult = new TestResult();
-        testResult.setSuccess("пока!");
-
-        return testResult;
+        return callsService.newCallFromWebhook(callRequest);
     }
 }
 

@@ -31,7 +31,7 @@
 
     <groupId>com.berzellius.integrations</groupId>
     <artifactId>apeyronled</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.2-SNAPSHOT</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -57,7 +57,7 @@
         <org.apache.maven.plugins.maven-compiler-plugin.source>1.8</org.apache.maven.plugins.maven-compiler-plugin.source>
         <org.apache.maven.plugins.maven-compiler-plugin.target>1.8</org.apache.maven.plugins.maven-compiler-plugin.target>
 
-        <start-class>com.berzellius.integrations.playground.Application</start-class>
+        <start-class>com.berzellius.integrations.apeyronled.Application</start-class>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
@@ -150,7 +150,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${org.springframework.boot.spring-boot-maven-plugin.version}</version>
                 <configuration>
-                    <mainClass>com.berzellius.integrations.playground.Application</mainClass>
+                    <mainClass>com.berzellius.integrations.apeyronled.Application</mainClass>
                 </configuration>
                 <executions>
                     <execution>

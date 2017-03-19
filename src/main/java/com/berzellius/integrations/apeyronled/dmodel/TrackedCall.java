@@ -6,8 +6,6 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 
 /**
@@ -16,12 +14,12 @@ import java.util.Map;
 @Entity(name = "Call")
 @Table(
         name = "calls",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"number", "dt", "project_id", "duplicate_reason"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"number", "dt", "site_id", "duplicate_reason"})
 )
 @Access(AccessType.FIELD)
-public class Call{
+public class TrackedCall {
 
-    public Call(){}
+    public TrackedCall(){}
 
     /*
      * Состояние в контексте обработки входящих звонков
@@ -30,35 +28,6 @@ public class Call{
         NEW,
         DONE
     }
-
-    public static enum Status {
-
-        ANSWERED("ANSWERED"),
-        NO_ANSWER("NO ANSWER"),
-        BUSY("BUSY"),
-        FAILED("FAILED");
-
-        private String str;
-
-        Status(String str) {
-            this.str = str;
-        }
-
-
-        public static Status valueByString(String str) {
-            for (Status s : Status.values()) {
-                if (s.getStr().equals(str)) {
-                    return s;
-                }
-            }
-            return null;
-        }
-
-        public String getStr() {
-            return str;
-        }
-    }
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "call_id_generator")
@@ -75,8 +44,8 @@ public class Call{
     @DateTimeFormat(pattern = "YYYY-mm-dd")
     protected Date dtmUpdate;
 
-    @Column(name = "project_id")
-    private Integer projectId;
+    @Column(name = "site_id")
+    private Integer siteId;
 
     @DateTimeFormat(pattern = "YYYY-mm-dd")
     private Date dt;
@@ -96,24 +65,17 @@ public class Call{
     private String duplicateReason = "";
 
     @Enumerated(EnumType.STRING)
-    private Status status;
-
-    @Enumerated(EnumType.STRING)
     private State state;
-
-    @ElementCollection
-    @CollectionTable(name = "calls_params", joinColumns = @JoinColumn(name = "id"))
-    private Map<String, String> params = new LinkedHashMap<>();
 
     @Override
     public boolean equals(Object obj) {
 
-        return (obj instanceof Call) && (this.getId().equals(((Call) obj).getId())) ||
+        return (obj instanceof TrackedCall) && (this.getId().equals(((TrackedCall) obj).getId())) ||
                 (
-                        this.getNumber().equals(((Call) obj).getNumber()) &&
-                                this.getDt().equals(((Call) obj).getDt()) &&
-                                this.getProjectId().equals(((Call) obj).getProjectId()) &&
-                                this.getDuplicateReason().equals(((Call) obj).getDuplicateReason())
+                        this.getNumber().equals(((TrackedCall) obj).getNumber()) &&
+                                this.getDt().equals(((TrackedCall) obj).getDt()) &&
+                                this.getSiteId().equals(((TrackedCall) obj).getSiteId()) &&
+                                this.getDuplicateReason().equals(((TrackedCall) obj).getDuplicateReason())
                         );
     }
 
@@ -123,8 +85,7 @@ public class Call{
 
         return "num: " + this.getNumber() +
                 ", date: " + sdf.format(this.getDt()) +
-                ", source: " + this.getSource() +
-                ", params: " + this.getParams().toString();
+                ", source: " + this.getSource();
     }
 
     public Long getId() {
@@ -151,28 +112,12 @@ public class Call{
         this.dtmUpdate = dtmUpdate;
     }
 
-    public Map<String, String> getParams() {
-        return params;
-    }
-
-    public void setParams(Map<String, String> params) {
-        this.params = params;
-    }
-
     public State getState() {
         return state;
     }
 
     public void setState(State state) {
         this.state = state;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
     }
 
     public String getSource() {
@@ -191,12 +136,12 @@ public class Call{
         this.dt = dt;
     }
 
-    public Integer getProjectId() {
-        return projectId;
+    public Integer getSiteId() {
+        return siteId;
     }
 
-    public void setProjectId(Integer projectId) {
-        this.projectId = projectId;
+    public void setSiteId(Integer siteId) {
+        this.siteId = siteId;
     }
 
     public String getNumber() {
