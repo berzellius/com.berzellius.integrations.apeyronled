@@ -17,7 +17,7 @@ import java.util.Date;
         uniqueConstraints = @UniqueConstraint(columnNames = {"number", "dt", "site_id", "duplicate_reason"})
 )
 @Access(AccessType.FIELD)
-public class TrackedCall {
+public class TrackedCall extends DModelEntity {
 
     public TrackedCall(){}
 

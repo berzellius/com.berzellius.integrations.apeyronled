@@ -1,5 +1,6 @@
 package com.berzellius.integrations.apeyronled.dto.site;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.Date;
@@ -17,8 +18,10 @@ public class CallDTO {
     * TODO Описание звонка
     */
     private String contact_phone_number; // Номер, с которого звонили
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
     private Date notification_time; // Время
     private Integer site_id; // ID проекта - отличительный признак сайта (id проекта или др в зависимости от типа коллтрекинга)
+    private String campaign; // название рекламной компании
     /*
     *
     * Технические поля
@@ -64,5 +67,13 @@ public class CallDTO {
 
     public void setProcessed(String processed) {
         this.processed = processed;
+    }
+
+    public String getCampaign() {
+        return campaign;
+    }
+
+    public void setCampaign(String campaign) {
+        this.campaign = campaign;
     }
 }

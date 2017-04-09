@@ -2,6 +2,7 @@ package com.berzellius.integrations.apeyronled.web;
 
 import com.berzellius.integrations.apeyronled.businesslogic.processes.CallsService;
 import com.berzellius.integrations.apeyronled.businesslogic.processes.LeadsFromSiteService;
+import com.berzellius.integrations.apeyronled.dto.site.CallRecordRequest;
 import com.berzellius.integrations.apeyronled.dto.site.CallRequest;
 import com.berzellius.integrations.apeyronled.dto.site.LeadRequest;
 import com.berzellius.integrations.apeyronled.dto.site.Result;
@@ -53,6 +54,20 @@ public class RestController extends BaseController {
         //System.out.println("webhook! " + callRequest.toString());
         //throw new NotFoundException("out of service!");
         return callsService.newCallFromWebhook(callRequest);
+    }
+
+    @RequestMapping(
+            value = "call_record",
+            method = RequestMethod.POST,
+            consumes="application/json",
+            produces="application/json"
+    )
+    @ResponseBody
+    public Result newCallRecords(
+            @RequestBody
+            CallRecordRequest callRecordRequest
+    ){
+        return callsService.newCallRecords(callRecordRequest);
     }
 }
 

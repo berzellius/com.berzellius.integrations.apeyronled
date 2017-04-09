@@ -6,9 +6,12 @@ import com.berzellius.integrations.amocrmru.dto.api.amocrm.response.AmoCRMCreate
 import com.berzellius.integrations.amocrmru.dto.api.amocrm.response.AmoCRMCreatedEntityResponse;
 import com.berzellius.integrations.amocrmru.dto.api.amocrm.response.AmoCRMCreatedLeadsResponse;
 import com.berzellius.integrations.amocrmru.service.AmoCRMService;
+import com.berzellius.integrations.apeyronled.businesslogic.rules.transformer.FieldsTransformer;
 import com.berzellius.integrations.apeyronled.businesslogic.rules.validator.BusinessRulesValidator;
+import com.berzellius.integrations.apeyronled.dmodel.CallRecord;
 import com.berzellius.integrations.apeyronled.dmodel.Site;
 import com.berzellius.integrations.apeyronled.dmodel.TrackedCall;
+import com.berzellius.integrations.apeyronled.repository.CallRecordRepository;
 import com.berzellius.integrations.apeyronled.repository.SiteRepository;
 import com.berzellius.integrations.apeyronled.repository.TrackedCallRepository;
 import com.berzellius.integrations.basic.exception.APIAuthException;
@@ -35,6 +38,9 @@ public class IncomingCallBusinessProcessImpl implements IncomingCallBusinessProc
     TrackedCallRepository trackedCallRepository;
 
     @Autowired
+    CallRecordRepository callRecordRepository;
+
+    @Autowired
     AmoCRMService amoCRMService;
 
     @Autowired
@@ -42,6 +48,9 @@ public class IncomingCallBusinessProcessImpl implements IncomingCallBusinessProc
 
     @Autowired
     BusinessRulesValidator businessRulesValidator;
+
+    @Autowired
+    FieldsTransformer fieldsTransformer;
 
     private static final boolean CREATE_TASK_FOR_EACH_CALL = false;
     private static final boolean CREATE_LEAD_IF_ABSENT = true;
@@ -91,11 +100,74 @@ public class IncomingCallBusinessProcessImpl implements IncomingCallBusinessProc
     private HashMap<Integer, Long> siteIdToContactsSource;
     private HashMap<Integer, Long> siteIdToLeadsSource;
 
+    private String transformPhone(String phone){
+        String res = fieldsTransformer.transform(phone, FieldsTransformer.Transformation.CALL_NUMBER_COMMON);
+        //res = fieldsTransformer.transform(res, FieldsTransformer.Transformation.CALL_NUMBER_LEADING_7);
+        return res;
+    }
+
+    @Override
+    public void addCallRecordToCRM(CallRecord callRecord) throws APIAuthException {
+        Assert.notNull(callRecord.getState());
+        Assert.notNull(callRecord.getCalled_phone());
+        Assert.notNull(callRecord.getCalling_phone());
+        Assert.notNull(callRecord.getDirection());
+        Assert.notNull(callRecord.getUuid());
+        Assert.notNull(callRecord.getLink());
+        Assert.notNull(callRecord.getDuration());
+
+        log.info(
+                "Work with call record#" + callRecord.getUuid() + ": " +
+                        callRecord.getDirection().toString() +
+                        " from " + callRecord.getCalling_phone() +
+                        " to " + callRecord.getCalled_phone());
+
+        Integer noteType = null;
+        String phone = callRecord.getCalling_phone();
+        switch (callRecord.getDirection()){
+            case IN:
+                //phone = callRecord.getCalling_phone();
+                noteType = 10;
+                break;
+            case OUT:
+                //phone = callRecord.getCalled_phone();
+                noteType = 11;
+        }
+        // TODO - проверка на заполнение правильных полей найденных контактов
+        List<AmoCRMContact> crmContacts = amoCRMService.getContactsByQuery(phone);
+
+        if(crmContacts != null && crmContacts.size() > 0){
+            for (AmoCRMContact crmContact : crmContacts){
+                log.info("add record to contact #" + crmContact.getId().toString());
+
+                AmoCRMNote amoCRMNote = new AmoCRMNote();
+                amoCRMNote.setNote_type(noteType);
+
+                AmoCRMNoteText amoCRMNoteText = new AmoCRMNoteText();
+                amoCRMNoteText.setPhone(phone);
+                amoCRMNoteText.setCall_status("4");
+                amoCRMNoteText.setLink(callRecord.getLink());
+                amoCRMNoteText.setDuration(callRecord.getDuration());
+                amoCRMNoteText.setUniq(callRecord.getUuid());
+                amoCRMNoteText.setCall_result("");
+                amoCRMNoteText.setSrc("uiscom");
+                amoCRMNote.setText(amoCRMNoteText);
+
+                amoCRMService.addNoteToContact(amoCRMNote, crmContact);
+            }
+
+            callRecord.setState(CallRecord.State.DONE);
+            callRecordRepository.save(callRecord);
+        }
+
+    }
+
     @Override
     public void newIncomingCall(TrackedCall call) {
         Assert.notNull(call.getSiteId());
         Assert.notNull(call.getNumber());
         Assert.notNull(call.getState());
+
         log.info("Work with new call from number: " + call.getNumber());
 
         try {
@@ -139,6 +211,8 @@ public class IncomingCallBusinessProcessImpl implements IncomingCallBusinessProc
 
                         for (AmoCRMCustomFieldValue amoCRMCustomFieldValue : amoCRMCustomField.getValues()) {
                             String value = amoCRMCustomFieldValue.getValue();
+                            value = transformPhone(value);
+                            log.info("phone value: " + value);
                             if (value.length() == 11) {
                                 value = value.substring(1);
                             }
@@ -154,7 +228,9 @@ public class IncomingCallBusinessProcessImpl implements IncomingCallBusinessProc
 
         if (contact == null) {
             log.info("All found contacts for number " + number + " is wrong");
-            throw new IllegalStateException("All found contacts for number " + number + " is wrong");
+            contact = createContact(call);
+            this.workWithContact(contact, call);
+            //throw new IllegalStateException("All found contacts for number " + number + " is wrong");
         } else {
             log.info("Got contact #" + contact.getId().toString() + " for number " + number + "!");
             this.workWithContact(contact, call);
@@ -371,7 +447,7 @@ public class IncomingCallBusinessProcessImpl implements IncomingCallBusinessProc
 
         String number = call.getNumber();
         AmoCRMLead amoCRMLead = new AmoCRMLead();
-        amoCRMLead.setName("[ТЕСТ!] Автоматически -> " + contact.getName());
+        amoCRMLead.setName("Автоматически -> " + contact.getName());
 
         Long responsibleUserID = contact.getResponsible_user_id() != null ? contact.getResponsible_user_id() : this.getDefaultUserId();
 
@@ -380,13 +456,19 @@ public class IncomingCallBusinessProcessImpl implements IncomingCallBusinessProc
         amoCRMLead.addStringValuesToCustomField(this.getPhoneNumberCustomFieldLeads(), numberField);
         String[] sourceField = {call.getSource()};
         amoCRMLead.addStringValuesToCustomField(this.getMarketingChannelLeadsCustomField(), sourceField);
-        String[] projectField = {this.getSiteIdToLeadsSource().get(call.getSiteId()).toString()};
-        if(projectField != null) {
-            amoCRMLead.addStringValuesToCustomField(this.getSourceLeadsCustomField(), projectField);
+
+        if(this.getSiteIdToLeadsSource().get(call.getSiteId()) != null) {
+            String[] projectField = {this.getSiteIdToLeadsSource().get(call.getSiteId()).toString()};
+            if (projectField != null) {
+                amoCRMLead.addStringValuesToCustomField(this.getSourceLeadsCustomField(), projectField);
+            } else {
+                log.info("not found Ids for siteID = " + call.getSiteId());
+            }
         }
         else{
             log.info("not found Ids for siteID = " + call.getSiteId());
         }
+
         log.info("Creating lead for contact #" + contact.getId());
 
         AmoCRMCreatedEntityResponse amoCRMCreatedEntityResponse = amoCRMService.addLead(amoCRMLead);
@@ -408,7 +490,7 @@ public class IncomingCallBusinessProcessImpl implements IncomingCallBusinessProc
         String number = call.getNumber();
 
         AmoCRMContact amoCRMContact = new AmoCRMContact();
-        amoCRMContact.setName("[ТЕСТ!] Звонок:[" + number + "]");
+        amoCRMContact.setName("Звонок:[" + number + "]");
         amoCRMContact.setResponsible_user_id(this.getDefaultUserId());
         String[] fieldNumber = {number};
         String[] extFieldNumber = {"7" + number};
@@ -416,11 +498,16 @@ public class IncomingCallBusinessProcessImpl implements IncomingCallBusinessProc
         amoCRMContact.addStringValuesToCustomField(this.getPhoneNumberContactStockField(), extFieldNumber, this.getPhoneNumberStockFieldContactEnumWork());
         String[] fieldSource = {call.getSource()};
         amoCRMContact.addStringValuesToCustomField(this.getMarketingChannelContactsCustomField(), fieldSource);
-        String[] fieldProject = {this.getSiteIdToContactsSource().get(call.getSiteId()).toString()};
-        if(fieldProject != null) {
-            amoCRMContact.addStringValuesToCustomField(this.getSourceContactsCustomField(), fieldProject);
+
+        if(this.getSiteIdToContactsSource().get(call.getSiteId()) != null) {
+            String[] fieldProject = {this.getSiteIdToContactsSource().get(call.getSiteId()).toString()};
+            if (fieldProject != null) {
+                amoCRMContact.addStringValuesToCustomField(this.getSourceContactsCustomField(), fieldProject);
+            } else {
+                log.info("not found Ids for siteID = " + call.getSiteId());
+            }
         }
-        else{
+        else {
             log.info("not found Ids for siteID = " + call.getSiteId());
         }
 
@@ -589,5 +676,4 @@ public class IncomingCallBusinessProcessImpl implements IncomingCallBusinessProc
     public void setPhoneNumberStockFieldContactEnumWork(String phoneNumberStockFieldContactEnumWork) {
         this.phoneNumberStockFieldContactEnumWork = phoneNumberStockFieldContactEnumWork;
     }
-
 }

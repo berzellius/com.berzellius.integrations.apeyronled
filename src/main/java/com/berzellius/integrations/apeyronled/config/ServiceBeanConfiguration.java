@@ -12,6 +12,9 @@ import com.berzellius.integrations.apeyronled.businesslogic.rules.validator.Busi
 import com.berzellius.integrations.apeyronled.scheduling.SchedulingService;
 import com.berzellius.integrations.apeyronled.scheduling.SchedulingServiceImpl;
 import com.berzellius.integrations.apeyronled.settings.APISettings;
+import com.berzellius.integrations.comagicru.dto.ErrorHandlers.ComagicAPIRequestErrorHandler;
+import com.berzellius.integrations.comagicru.service.ComagicAPIService;
+import com.berzellius.integrations.comagicru.service.ComagicAPIServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -103,5 +106,15 @@ public class ServiceBeanConfiguration {
         incomingCallBusinessProcess.setSourceLeadsCustomField(APISettings.AmoCRMSourceLeadsCustomField);
 
         return incomingCallBusinessProcess;
+    }
+
+    @Bean
+    ComagicAPIService comagicAPIService(){
+        ComagicAPIService comagicApiService = new ComagicAPIServiceImpl();
+        comagicApiService.setErrorHandler(new ComagicAPIRequestErrorHandler());
+        comagicApiService.setLogin(APISettings.comagicLogin);
+        comagicApiService.setPassword(APISettings.comagicPass);
+
+        return comagicApiService;
     }
 }

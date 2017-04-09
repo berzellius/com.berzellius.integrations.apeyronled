@@ -31,7 +31,7 @@
 
     <groupId>com.berzellius.integrations</groupId>
     <artifactId>apeyronled</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>1.0.3-SNAPSHOT</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -43,9 +43,10 @@
     <properties>
         <com.berzellius.integrations.amocrmru.version>1.0-SNAPSHOT</com.berzellius.integrations.amocrmru.version>
         <com.berzellius.integrations.basic.version>1.0-SNAPSHOT</com.berzellius.integrations.basic.version>
+        <com.berzellius.integrations.comagicru.version>1.0-SNAPSHOT</com.berzellius.integrations.comagicru.version>
 
         <junit.version>4.12</junit.version>
-        <org.posrtgresql.version>9.2-1004-jdbc4</org.posrtgresql.version>
+        <org.posrtgresql.version>9.4.1212<!--9.2-1004-jdbc4--></org.posrtgresql.version>
         <org.hibernate.javax.persistence.version>1.0.0.Final</org.hibernate.javax.persistence.version>
         <javax.validation.version>1.1.0.Final</javax.validation.version>
         <org.springframework.boot.version>1.4.3.RELEASE</org.springframework.boot.version>
@@ -67,6 +68,11 @@
             <groupId>com.berzellius.integrations</groupId>
             <artifactId>amocrmru</artifactId>
             <version>${com.berzellius.integrations.amocrmru.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.berzellius.integrations</groupId>
+            <artifactId>comagicru</artifactId>
+            <version>${com.berzellius.integrations.comagicru.version}</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/junit/junit -->
         <dependency>

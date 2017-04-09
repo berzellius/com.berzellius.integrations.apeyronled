@@ -13,7 +13,7 @@ public class Lead implements Serializable {
     public Lead() {
     }
 
-    /*
+    /**
     * Поля заказа
     */
     private String name;
@@ -22,7 +22,7 @@ public class Lead implements Serializable {
     private String comment;
     private String referer;
     private String origin;
-    /*
+    /**
     * Utm
     */
     private String utm_source;
@@ -30,6 +30,12 @@ public class Lead implements Serializable {
     private String utm_content;
     private String utm_campaign;
     private String utm_term;
+
+    /**
+     * Поля трекинга
+     */
+    private Long session_id;
+    private Long visitor_id;
 
     public String getName() {
         return name;
@@ -117,5 +123,21 @@ public class Lead implements Serializable {
 
     public void setOrigin(String origin) {
         this.origin = origin;
+    }
+
+    public Long getSession_id() {
+        return session_id;
+    }
+
+    public void setSession_id(Long session_id) {
+        this.session_id = session_id;
+    }
+
+    public Long getVisitor_id() {
+        return visitor_id;
+    }
+
+    public void setVisitor_id(Long visitor_id) {
+        this.visitor_id = visitor_id;
     }
 }

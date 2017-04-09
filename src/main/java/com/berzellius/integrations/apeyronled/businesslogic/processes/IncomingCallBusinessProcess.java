@@ -1,7 +1,9 @@
 package com.berzellius.integrations.apeyronled.businesslogic.processes;
 
 
+import com.berzellius.integrations.apeyronled.dmodel.CallRecord;
 import com.berzellius.integrations.apeyronled.dmodel.TrackedCall;
+import com.berzellius.integrations.basic.exception.APIAuthException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -34,4 +36,6 @@ public interface IncomingCallBusinessProcess {
     void setPhoneNumberContactStockField(Long phoneNumberContactStockField);
 
     void setPhoneNumberStockFieldContactEnumWork(String phoneNumberStockFieldContactEnumWork);
+
+    void addCallRecordToCRM(CallRecord callRecord) throws APIAuthException;
 }

@@ -13,6 +13,7 @@ import com.berzellius.integrations.apeyronled.dto.site.Result;
 import com.berzellius.integrations.apeyronled.repository.LeadFromSiteRepository;
 import com.berzellius.integrations.apeyronled.repository.SiteRepository;
 import com.berzellius.integrations.basic.exception.APIAuthException;
+import com.berzellius.integrations.comagicru.service.ComagicAPIService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,9 @@ public class LeadFromSiteServiceImpl implements LeadsFromSiteService {
 
     @Autowired
     AmoCRMService amoCRMService;
+
+    @Autowired
+    ComagicAPIService comagicAPIService;
 
     private Long phoneNumberCustomFieldLeads;
     private Long phoneNumberCustomField;
@@ -93,8 +97,11 @@ public class LeadFromSiteServiceImpl implements LeadsFromSiteService {
             }
 
 
-            // todo заложить определение имени Рекламного канала!
-            String marketingChannel = "Тестовый_канал";
+            String marketingChannel = "";
+            if(leadFromSite.getLead().getVisitor_id() != null){
+                marketingChannel = comagicAPIService.getActiveAcByVisitorId(leadFromSite.getLead().getVisitor_id());
+            }
+
             AmoCRMContact contact = contactForLeadFromSite(leadFromSite, marketingChannel);
 
             if(contact == null){
@@ -150,7 +157,7 @@ public class LeadFromSiteServiceImpl implements LeadsFromSiteService {
         }
 
         AmoCRMContact amoCRMContact = new AmoCRMContact();
-        amoCRMContact.setName("[ТЕСТ!]" + lead.getName() + " (с сайта " + lead.getOrigin() + ") :[" + contacts + "]");
+        amoCRMContact.setName(lead.getName() + " (с сайта " + lead.getOrigin() + ") :[" + contacts + "]");
         amoCRMContact.setResponsible_user_id(this.getDefaultUserID());
 
         if(lead.getPhone() != null){
@@ -216,7 +223,7 @@ public class LeadFromSiteServiceImpl implements LeadsFromSiteService {
 
         AmoCRMLead lead = new AmoCRMLead();
 
-        lead.setName("[ТЕСТ!] Заявка с сайта -> " + this.contactStrByLead(leadFromSite.getLead()));
+        lead.setName("Заявка с сайта -> " + this.contactStrByLead(leadFromSite.getLead()));
         lead.setResponsible_user_id(this.getDefaultUserID());
 
         if(leadFromSite.getLead().getPhone() != null){
