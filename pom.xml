@@ -141,6 +141,23 @@
             <version>${org.springframework.boot.version}</version>
         </dependency>
         <!-- Spring Framework ends -->
+        <!-- plugins dependencies starts -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <version>${org.springframework.boot.spring-boot-maven-plugin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-war-plugin</artifactId>
+            <version>${org.apache.maven.plugins.maven-war-plugin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>${org.apache.maven.plugins.maven-compiler-plugin.version}</version>
+        </dependency>
+        <!-- plugins dependencies ends -->
     </dependencies>
 
     <build>
