@@ -22,6 +22,10 @@ public class CallDTO {
     private Date notification_time; // Время
     private Integer site_id; // ID проекта - отличительный признак сайта (id проекта или др в зависимости от типа коллтрекинга)
     private String campaign; // название рекламной компании
+    private String virtual_number;
+    private String search_engine;
+    private String search_query;
+    private Long campaign_id;
     /*
     *
     * Технические поля
@@ -75,5 +79,37 @@ public class CallDTO {
 
     public void setCampaign(String campaign) {
         this.campaign = campaign;
+    }
+
+    public String getVirtual_number() {
+        return virtual_number;
+    }
+
+    public void setVirtual_number(String virtual_number) {
+        this.virtual_number = virtual_number;
+    }
+
+    public String getSearch_engine() {
+        return search_engine;
+    }
+
+    public void setSearch_engine(String search_engine) {
+        this.search_engine = search_engine;
+    }
+
+    public String getSearch_query() {
+        return search_query;
+    }
+
+    public void setSearch_query(String search_query) {
+        this.search_query = search_query;
+    }
+
+    public Long getCampaign_id() {
+        return campaign_id;
+    }
+
+    public void setCampaign_id(Long campaign_id) {
+        this.campaign_id = campaign_id;
     }
 }

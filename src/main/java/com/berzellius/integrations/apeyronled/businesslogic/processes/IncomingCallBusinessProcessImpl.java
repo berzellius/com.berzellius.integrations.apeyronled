@@ -22,10 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by berz on 10.10.2015.
@@ -104,6 +101,27 @@ public class IncomingCallBusinessProcessImpl implements IncomingCallBusinessProc
         String res = fieldsTransformer.transform(phone, FieldsTransformer.Transformation.CALL_NUMBER_COMMON);
         //res = fieldsTransformer.transform(res, FieldsTransformer.Transformation.CALL_NUMBER_LEADING_7);
         return res;
+    }
+
+    private AmoCRMLead transformLeadForChangePipeline(AmoCRMLead amoCRMLead, TrackedCall call) {
+        HashMap<String, Object> params = new LinkedHashMap<>();
+        if(call.getVirtual_number() != null){
+            params.put("virtual_number", call.getVirtual_number());
+        }
+
+        if(call.getSearch_engine() != null){
+            params.put("search_engine", call.getSearch_engine());
+        }
+
+        if(call.getCampaign_id() != null){
+            params.put("campaign_id", call.getCampaign_id());
+        }
+
+        if(call.getSource() != null){
+            params.put("source", call.getSource());
+        }
+
+        return fieldsTransformer.transform(amoCRMLead, FieldsTransformer.Transformation.AMOCRMLEAD_PIPELINE_AND_TAGS, params);
     }
 
     @Override
@@ -469,8 +487,9 @@ public class IncomingCallBusinessProcessImpl implements IncomingCallBusinessProc
             log.info("not found Ids for siteID = " + call.getSiteId());
         }
 
-        log.info("Creating lead for contact #" + contact.getId());
+        amoCRMLead = transformLeadForChangePipeline(amoCRMLead, call);
 
+        log.info("Creating lead for contact #" + contact.getId());
         AmoCRMCreatedEntityResponse amoCRMCreatedEntityResponse = amoCRMService.addLead(amoCRMLead);
 
 

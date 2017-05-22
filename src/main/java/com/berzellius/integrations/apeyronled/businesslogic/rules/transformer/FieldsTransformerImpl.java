@@ -16,6 +16,8 @@ public class FieldsTransformerImpl implements FieldsTransformer {
                 return new CallNumberCommonTransformerProcessor();
             case CALL_NUMBER_LEADING_7:
                 return new CallNumberLeading7TransformerProcessor();
+            case AMOCRMLEAD_PIPELINE_AND_TAGS:
+                return new AmoCRMLeadPipelineTransformerProcessor();
         }
 
         throw new TransformationException("cant get proper TransformerProcessor!");

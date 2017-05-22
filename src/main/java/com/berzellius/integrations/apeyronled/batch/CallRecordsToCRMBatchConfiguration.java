@@ -8,9 +8,11 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
+import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.batch.item.database.JpaPagingItemReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -20,6 +22,8 @@ import org.springframework.context.annotation.PropertySource;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
@@ -45,13 +49,25 @@ public class CallRecordsToCRMBatchConfiguration {
     @Autowired
     AmoCRMService amoCRMService;
 
-    @Bean
-    public ItemReader<CallRecord> callRecordItemReader(){
+    //@Bean(destroyMethod="")
+    @StepScope
+    @Bean(destroyMethod = "")
+    public ItemStreamReader<CallRecord> callRecordItemReader(){
+        Calendar fromTime = Calendar.getInstance();
+        fromTime.setTime(new Date());
+        fromTime.set(Calendar.HOUR, 0);
+        fromTime.set(Calendar.MINUTE, 0);
+        fromTime.set(Calendar.SECOND, 0);
+        fromTime.set(Calendar.MILLISECOND, 0);
+
+        System.out.println("records from date: " + fromTime.getTime());
+
         JpaPagingItemReader<CallRecord> reader = new JpaPagingItemReader<>();
         reader.setEntityManagerFactory(entityManager.getEntityManagerFactory());
-        reader.setQueryString("select c from CallRecord c where state = :st");
+        reader.setQueryString("select c from CallRecord c where state = :st and dt > :dtm");
         HashMap<String, Object> params = new LinkedHashMap<>();
         params.put("st", CallRecord.State.NEW);
+        params.put("dtm", fromTime.getTime());
         reader.setParameterValues(params);
 
         return reader;

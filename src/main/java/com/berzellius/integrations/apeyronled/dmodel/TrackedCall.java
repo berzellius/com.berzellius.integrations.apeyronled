@@ -21,6 +21,14 @@ public class TrackedCall extends DModelEntity {
 
     public TrackedCall(){}
 
+    public Long getCampaign_id() {
+        return campaign_id;
+    }
+
+    public void setCampaign_id(Long campaign_id) {
+        this.campaign_id = campaign_id;
+    }
+
     /*
      * Состояние в контексте обработки входящих звонков
      */
@@ -66,6 +74,11 @@ public class TrackedCall extends DModelEntity {
 
     @Enumerated(EnumType.STRING)
     private State state;
+
+    private String virtual_number;
+    private String search_engine;
+    private String search_query;
+    private Long campaign_id;
 
     @Override
     public boolean equals(Object obj) {
@@ -158,6 +171,30 @@ public class TrackedCall extends DModelEntity {
 
     public void setDuplicateReason(String duplicateReason) {
         this.duplicateReason = duplicateReason;
+    }
+
+    public String getVirtual_number() {
+        return virtual_number;
+    }
+
+    public void setVirtual_number(String virtual_number) {
+        this.virtual_number = virtual_number;
+    }
+
+    public String getSearch_engine() {
+        return search_engine;
+    }
+
+    public void setSearch_engine(String search_engine) {
+        this.search_engine = search_engine;
+    }
+
+    public String getSearch_query() {
+        return search_query;
+    }
+
+    public void setSearch_query(String search_query) {
+        this.search_query = search_query;
     }
 }
 

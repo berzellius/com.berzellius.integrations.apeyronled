@@ -119,6 +119,10 @@ public class  CallsServiceImpl implements CallsService {
                 String phone = transformPhone(callDTO.getContact_phone_number());
                 trackedCall.setNumber(phone);
                 trackedCall.setSource(callDTO.getCampaign());
+                trackedCall.setVirtual_number(callDTO.getVirtual_number());
+                trackedCall.setSearch_engine(callDTO.getSearch_engine());
+                trackedCall.setSearch_query(callDTO.getSearch_query());
+                trackedCall.setCampaign_id(trackedCall.getCampaign_id());
 
                 trackedCallRepository.save(trackedCall);
             }

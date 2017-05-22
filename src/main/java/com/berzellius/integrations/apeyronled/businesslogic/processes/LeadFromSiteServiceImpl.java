@@ -1,7 +1,6 @@
 package com.berzellius.integrations.apeyronled.businesslogic.processes;
 
-import com.berzellius.integrations.amocrmru.dto.api.amocrm.AmoCRMContact;
-import com.berzellius.integrations.amocrmru.dto.api.amocrm.AmoCRMLead;
+import com.berzellius.integrations.amocrmru.dto.api.amocrm.*;
 import com.berzellius.integrations.amocrmru.dto.api.amocrm.response.AmoCRMCreatedEntityResponse;
 import com.berzellius.integrations.amocrmru.service.AmoCRMService;
 import com.berzellius.integrations.apeyronled.businesslogic.rules.transformer.FieldsTransformer;
@@ -192,6 +191,51 @@ public class LeadFromSiteServiceImpl implements LeadsFromSiteService {
     private void workWithContact(LeadFromSite leadFromSite, AmoCRMContact contact, String sourceName) throws APIAuthException {
         log.info("searching leads for contact#" + contact.getId().toString());
 
+        // Проверяем заполненность полей "телефон" и  "email"
+        log.info("checking contact fields...");
+        String phone2check = leadFromSite.getLead().getPhone();
+        log.info("phone: " + phone2check);
+        String email2check = leadFromSite.getLead().getEmail();
+        log.info("email: " + email2check);
+        for(AmoCRMCustomField amoCRMCustomField : contact.getCustom_fields()){
+            if(amoCRMCustomField.getCode() != null &&
+                    amoCRMCustomField.getCode().equals("PHONE")){
+                for(AmoCRMCustomFieldValue amoCRMCustomFieldValue : amoCRMCustomField.getValues()){
+                    String transformedPhone = this.transformPhone(amoCRMCustomFieldValue.getValue());
+                    if(transformedPhone.equals(phone2check)){
+                        // больше можно не проверять
+                        phone2check = null;
+                    }
+                }
+            }
+
+            if(amoCRMCustomField.getCode() != null &&
+                    amoCRMCustomField.getCode().equals("EMAIL")){
+                for(AmoCRMCustomFieldValue amoCRMCustomFieldValue : amoCRMCustomField.getValues()){
+                    if(amoCRMCustomFieldValue.getValue().equals(email2check)){
+                        // больше можно не проверять
+                        email2check = null;
+                    }
+                }
+            }
+        }
+
+        if(phone2check != null){
+            log.info("adding to phone numbers: ".concat(phone2check));
+            String[] phone2checkField = {phone2check};
+            contact.addStringValuesToCustomField(this.getPhoneNumberContactStockField(), phone2checkField, this.getPhoneNumberStockFieldContactEnumWork());
+        }
+
+        if(email2check != null){
+            log.info("adding to emails: ".concat(email2check));
+            String[] email2checkField = {email2check};
+            contact.addStringValuesToCustomField(this.getEmailContactCustomField(), email2checkField, this.getEmailContactEnum());
+        }
+
+        amoCRMService.saveByUpdate(contact);
+
+
+        // Проверяем, есть ли сделки
         ArrayList<Long> leadIds = contact.getLinked_leads_id();
         if (leadIds != null && leadIds.size() != 0) {
             log.info("Leads found. Checking statuses");
@@ -211,7 +255,6 @@ public class LeadFromSiteServiceImpl implements LeadsFromSiteService {
                 }
             }
         }
-
         // Если лид не найден, то попадаем сюда и создаем лид
         this.createLead(leadFromSite, contact, sourceName);
 

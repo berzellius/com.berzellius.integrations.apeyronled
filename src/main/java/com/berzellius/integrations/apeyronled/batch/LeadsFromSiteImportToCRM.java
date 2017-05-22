@@ -61,7 +61,6 @@ public class LeadsFromSiteImportToCRM {
                 try {
                     // lets go
                     return leadsFromSiteService.processLeadFromSite(leadFromSite);
-
                 }
                 catch(RuntimeException e){
                     System.out.println("exception while processing LeadFromSite");

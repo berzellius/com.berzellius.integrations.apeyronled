@@ -8,7 +8,6 @@ import org.springframework.batch.core.repository.JobExecutionAlreadyRunningExcep
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -24,7 +23,7 @@ public class CallRecordsScheduler {
     @Autowired
     Job newCallRecordsToCRMJob;
 
-    @Scheduled(fixedDelay = 900000)
+    //@Scheduled(fixedDelay = 900000)
     public void runCallsBatch() throws JobParametersInvalidException, JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException {
         JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
         jobParametersBuilder.addDate("start", new Date());
