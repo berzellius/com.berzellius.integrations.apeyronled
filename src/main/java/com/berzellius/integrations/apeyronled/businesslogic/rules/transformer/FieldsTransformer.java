@@ -14,7 +14,7 @@ public interface FieldsTransformer {
     <T> T transform(T input, Transformation transformation, HashMap<String, Object> params);
 
     public static enum Transformation{
-        CALL_NUMBER_LEADING_7, CALL_NUMBER_COMMON, AMOCRMLEAD_PIPELINE_AND_TAGS
+        CALL_NUMBER_LEADING_7, CALL_NUMBER_COMMON, AMOCRMLEAD_PIPELINE_AND_TAGS, AMOCRM_LEADFROMSITE_PIPELINE_AND_TAGS
     }
 
     public String transform(String input, Transformation transformation);

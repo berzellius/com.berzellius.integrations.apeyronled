@@ -462,14 +462,12 @@ public class IncomingCallBusinessProcessImpl implements IncomingCallBusinessProc
     }
 
     private AmoCRMLead createLeadForContact(AmoCRMContact contact, TrackedCall call) throws APIAuthException {
-
         String number = call.getNumber();
         AmoCRMLead amoCRMLead = new AmoCRMLead();
         amoCRMLead.setName("Автоматически -> " + contact.getName());
 
         Long responsibleUserID = contact.getResponsible_user_id() != null ? contact.getResponsible_user_id() : this.getDefaultUserId();
 
-        amoCRMLead.setResponsible_user_id(responsibleUserID);
         String[] numberField = {number};
         amoCRMLead.addStringValuesToCustomField(this.getPhoneNumberCustomFieldLeads(), numberField);
         String[] sourceField = {call.getSource()};
@@ -488,6 +486,16 @@ public class IncomingCallBusinessProcessImpl implements IncomingCallBusinessProc
         }
 
         amoCRMLead = transformLeadForChangePipeline(amoCRMLead, call);
+        if(
+                amoCRMLead.getResponsible_user_id() == null ||
+                        (
+                                contact.getResponsible_user_id() != null &&
+                                        !contact.getResponsible_user_id().equals(this.getDefaultUserId())
+                        )
+                ){
+            // если в ходе преобразования не установлен отвественный или если ответственный (не являющийся ответственным по умолчанию) уже определен по контакту
+            amoCRMLead.setResponsible_user_id(responsibleUserID);
+        }
 
         log.info("Creating lead for contact #" + contact.getId());
         AmoCRMCreatedEntityResponse amoCRMCreatedEntityResponse = amoCRMService.addLead(amoCRMLead);

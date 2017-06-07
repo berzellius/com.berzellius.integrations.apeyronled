@@ -19,10 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by berz on 09.03.2017.
@@ -267,7 +264,7 @@ public class LeadFromSiteServiceImpl implements LeadsFromSiteService {
         AmoCRMLead lead = new AmoCRMLead();
 
         lead.setName("Заявка с сайта -> " + this.contactStrByLead(leadFromSite.getLead()));
-        lead.setResponsible_user_id(this.getDefaultUserID());
+        //lead.setResponsible_user_id(this.getDefaultUserID());
 
         if(leadFromSite.getLead().getPhone() != null){
             String[] numberField = {leadFromSite.getLead().getPhone()};
@@ -286,7 +283,23 @@ public class LeadFromSiteServiceImpl implements LeadsFromSiteService {
         lead.addStringValuesToCustomField(this.getMarketingChannelLeadsCustomField(), fieldSource);
 
 
-        lead.tag(this.getLeadFromSiteTagId(), "Заявка с сайта");
+        //lead.tag(this.getLeadFromSiteTagId(), "Заявка с сайта");
+        lead = this.transfromLeadFromSiteForChangePipelineAndTags(lead, leadFromSite);
+        // если в ходе трансформации ответственный не определен
+        // если у контакта есть ответственный и он не является ответственным по умолчанию, ставим отвественного за контакт
+        // иначе ставим пользователя по умолчанию
+        if(lead.getResponsible_user_id() == null){
+            if(
+                    contact.getResponsible_user_id() != null &&
+                            !contact.getResponsible_user_id().equals(this.getDefaultUserID())
+                    ){
+                lead.setResponsible_user_id(contact.getResponsible_user_id());
+            }
+            else{
+                lead.setResponsible_user_id(this.getDefaultUserID());
+            }
+        }
+
 
         log.info("creating lead for leadFromSite..");
 
@@ -318,6 +331,19 @@ public class LeadFromSiteServiceImpl implements LeadsFromSiteService {
         }
 
         return contact;
+    }
+
+    protected AmoCRMLead transfromLeadFromSiteForChangePipelineAndTags(AmoCRMLead amoCRMLead, LeadFromSite leadFromSite){
+        HashMap<String, Object> params = new LinkedHashMap<>();
+        if(leadFromSite.getSite() != null){
+            params.put("site", leadFromSite.getSite());
+        }
+
+        return fieldsTransformer.transform(
+                amoCRMLead,
+                FieldsTransformer.Transformation.AMOCRM_LEADFROMSITE_PIPELINE_AND_TAGS,
+                params
+        );
     }
 
 

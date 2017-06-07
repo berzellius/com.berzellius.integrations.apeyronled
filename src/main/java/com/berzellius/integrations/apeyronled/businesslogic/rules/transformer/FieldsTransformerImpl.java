@@ -18,6 +18,8 @@ public class FieldsTransformerImpl implements FieldsTransformer {
                 return new CallNumberLeading7TransformerProcessor();
             case AMOCRMLEAD_PIPELINE_AND_TAGS:
                 return new AmoCRMLeadPipelineTransformerProcessor();
+            case AMOCRM_LEADFROMSITE_PIPELINE_AND_TAGS:
+                return new AmoCRMLeadFromSiteTransformerProcessor();
         }
 
         throw new TransformationException("cant get proper TransformerProcessor!");
