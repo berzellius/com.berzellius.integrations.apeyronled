@@ -17,6 +17,8 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -89,8 +91,17 @@ public class NewCallsToCRMBatchConfiguration {
                 .processor(callProcessor)
                 .faultTolerant()
                 .skip(RuntimeException.class)
-                .skipLimit(2000)
+                .skipLimit(20)
+                .taskExecutor(taskExecutor())
+                .throttleLimit(1)
                 .build();
+    }
+
+    @Bean
+    public TaskExecutor taskExecutor() {
+        SimpleAsyncTaskExecutor taskExecutor = new SimpleAsyncTaskExecutor();
+        taskExecutor.setConcurrencyLimit(1);
+        return taskExecutor;
     }
 
     @Bean

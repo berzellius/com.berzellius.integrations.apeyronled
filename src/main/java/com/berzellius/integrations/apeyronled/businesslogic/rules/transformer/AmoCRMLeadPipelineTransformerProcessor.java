@@ -26,10 +26,12 @@ public class AmoCRMLeadPipelineTransformerProcessor implements TransformerProces
             return (T) lead;
 
         if(this.getParams().get("virtual_number").equals("74959892629")){
-            // Сетевой отдел
-            lead.setPipeline_id(535984l);
-            // ответственный - Антон Филатов
-            lead.setResponsible_user_id(1283781l);
+            if(!lead.getPipeline_id().equals(535984l)) {
+                // Сетевой отдел
+                lead.setPipeline_id(535984l);
+                // ответственный - Антон Филатов
+                lead.setResponsible_user_id(1283781l);
+            }
         }
 
         if(this.getParams().get("virtual_number").equals("74951628555")){

@@ -24,6 +24,9 @@ public class SchedulingServiceImpl implements SchedulingService {
     Job newCallsToCRMJob;
 
     @Autowired
+    Job newContactAddedProcessJob;
+
+    @Autowired
     JobLauncher jobLauncher;
 
     @Override
@@ -42,5 +45,14 @@ public class SchedulingServiceImpl implements SchedulingService {
 
         System.out.println("START import calls to CRM!");
         jobLauncher.run(newCallsToCRMJob, jobParametersBuilder.toJobParameters());
+    }
+
+    @Override
+    public void runProcessingAddedContacts() throws JobParametersInvalidException, JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException {
+        JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
+        jobParametersBuilder.addDate("start", new Date());
+
+        System.out.println("START process Added Contacts to CRM!");
+        jobLauncher.run(newContactAddedProcessJob, jobParametersBuilder.toJobParameters());
     }
 }

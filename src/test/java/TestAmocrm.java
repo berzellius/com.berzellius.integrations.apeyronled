@@ -1,4 +1,6 @@
 import com.berzellius.integrations.amocrmru.dto.api.amocrm.AmoCRMContact;
+import com.berzellius.integrations.amocrmru.dto.api.amocrm.AmoCRMCustomField;
+import com.berzellius.integrations.amocrmru.dto.api.amocrm.AmoCRMCustomFieldValue;
 import com.berzellius.integrations.amocrmru.dto.api.amocrm.AmoCRMLead;
 import com.berzellius.integrations.amocrmru.service.AmoCRMService;
 import com.berzellius.integrations.apeyronled.TestApplication;
@@ -38,7 +40,7 @@ public class TestAmocrm {
         System.out.println(crmLeads);
     }
 
-    @Test
+    //@Test
     public void testLeadFromSite() throws APIAuthException {
         LeadFromSite leadFromSite = new LeadFromSite();
 
@@ -60,5 +62,69 @@ public class TestAmocrm {
         leadFromSite.setState(LeadFromSite.State.NEW);
 
         leadsFromSiteService.processLeadFromSite(leadFromSite);
+    }
+
+    /**
+     * Перенос данных из кастомного поля "мобильный телефон" в "системное" поле Amo
+     */
+    //@Test
+    public void testMoveCustomMobilePhoneToStock() throws APIAuthException {
+        Long[] ids = {40601885l};
+        Long customMobileField = 1897384l;
+        Long stockMobileField = 1543576l;
+        String mobPhoneEnum = "3663596";
+
+        for(Long id : ids){
+            this.processMoveCustomMobilePhoneToStock(id, customMobileField, stockMobileField, mobPhoneEnum);
+        }
+    }
+
+    protected void processMoveCustomMobilePhoneToStock(Long id, Long customMobileField, Long stockMobileField, String mobPhoneEnum) throws APIAuthException {
+        System.out.println("Contact#" + id.toString());
+        AmoCRMContact contact = amoCRMService.getContactById(id);
+        AmoCRMCustomField mob = contact.customFieldByFieldId(customMobileField);
+        if(mob != null && mob.getValues().size() > 0){
+            for(AmoCRMCustomFieldValue value : mob.getValues()) {
+                System.out.println("found custom mob phone " + value.getValue());
+                contact.addStringValuesToCustomField(stockMobileField, new String[]{value.getValue()}, mobPhoneEnum);
+            }
+            amoCRMService.saveByUpdate(contact);
+        }
+    }
+
+    //@Test
+    public void loopContacts() throws APIAuthException {
+        Long customMobileField = 1897384l;
+        Long stockMobileField = 1543576l;
+        String mobPhoneEnum = "3663596";
+
+        long limit = 200l;
+        long offset = 0l;
+        List<AmoCRMContact> crmContacts;
+        long count = 0l;
+
+        do{
+            System.out.println("offset = " + offset);
+            crmContacts = amoCRMService.getContactsEntities(limit, offset);
+            if(crmContacts != null){
+                System.out.println(crmContacts.size() + " contacts..");
+
+                for(AmoCRMContact crmContact : crmContacts){
+                    try {
+                        this.processMoveCustomMobilePhoneToStock(crmContact.getId(), customMobileField, stockMobileField, mobPhoneEnum);
+                    }
+                    catch (RuntimeException e){
+                        System.out.println("Processing stopped on id#" + crmContact.getId().toString());
+                    }
+                }
+
+                count += crmContacts.size();
+                offset += limit;
+                System.out.println(count + " contacts processed..");
+            }
+        }
+        while(crmContacts != null);
+
+        System.out.println(count + " contacts processed..");
     }
 }

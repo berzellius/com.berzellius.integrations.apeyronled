@@ -1,8 +1,7 @@
 package com.berzellius.integrations.apeyronled.batch;
 
-
-import com.berzellius.integrations.apeyronled.businesslogic.processes.LeadsFromSiteService;
-import com.berzellius.integrations.apeyronled.dmodel.LeadFromSite;
+import com.berzellius.integrations.apeyronled.businesslogic.processes.IncomingCallBusinessProcess;
+import com.berzellius.integrations.apeyronled.dmodel.ContactAdded;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -26,64 +25,67 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 /**
- * Created by berz on 19.06.2016.
+ * Created by berz on 25.06.2017.
  */
 @Configuration
 @EnableBatchProcessing
 @EnableAutoConfiguration
 @PropertySource("classpath:batch.properties")
-public class LeadsFromSiteImportToCRM {
-
-    @PersistenceContext
-    EntityManager entityManager;
-
+public class ContactsAddedProccessingBatchConfiguration {
     @Autowired
     JobBuilderFactory jobBuilderFactory;
 
     @Autowired
-    private LeadsFromSiteService leadsFromSiteService;
+    IncomingCallBusinessProcess incomingCallBusinessProcess;
 
+    @PersistenceContext
+    EntityManager entityManager;
+
+    //@StepScope
     @Bean
-    ItemReader<LeadFromSite> leadFromSiteItemReader(){
-        JpaPagingItemReader<LeadFromSite> reader = new JpaPagingItemReader<>();
+    public ItemReader<ContactAdded> contactAddedItemReader(){
+        JpaPagingItemReader<ContactAdded> reader = new JpaPagingItemReader<>();
         reader.setEntityManagerFactory(entityManager.getEntityManagerFactory());
-        reader.setQueryString("select lfs from LeadFromSite lfs where state = :st");
+        reader.setQueryString("select c from ContactAdded c where state = :st");
         HashMap<String, Object> params = new LinkedHashMap<>();
-        params.put("st", LeadFromSite.State.NEW);
+        params.put("st", ContactAdded.State.NEW);
         reader.setParameterValues(params);
 
         return reader;
     }
 
     @Bean
-    ItemProcessor<LeadFromSite, LeadFromSite> processor(){
-        return new ItemProcessor<LeadFromSite, LeadFromSite>() {
+    public ItemProcessor<ContactAdded, ContactAdded> contactAddedItemProcessor(){
+        return new ItemProcessor<ContactAdded, ContactAdded>() {
             @Override
-            public LeadFromSite process(LeadFromSite leadFromSite) throws Exception {
-                try {
-                    // lets go
-                    return leadsFromSiteService.processLeadFromSite(leadFromSite);
+            public ContactAdded process(ContactAdded contactAdded) throws Exception {
+                try{
+                    incomingCallBusinessProcess.processAddedContact(contactAdded);
                 }
                 catch(RuntimeException e){
-                    System.out.println("exception while processing LeadFromSite");
+                    System.out.println("exception while processing ContactAdded");
                     e.printStackTrace();
                     throw e;
                 }
+
+                return contactAdded;
             }
         };
     }
 
     @Bean
-    public Step leadFromSiteAddToCRMStep(
+    public Step contactAddedProcessorStep(
             StepBuilderFactory stepBuilderFactory,
-            ItemReader<LeadFromSite> reader,
-            ItemProcessor<LeadFromSite, LeadFromSite> processor
+            ItemReader<ContactAdded> contactAddedItemReader,
+            ItemProcessor<ContactAdded, ContactAdded> contactAddedItemProcessor
 
     ){
-        return stepBuilderFactory.get("leadFromSiteAddToCRMStep")
-                .<LeadFromSite, LeadFromSite>chunk(1)
-                .reader(reader)
-                .processor(processor)
+
+
+        return stepBuilderFactory.get("contactAddedProcessorStep")
+                .<ContactAdded, ContactAdded>chunk(1)
+                .reader(contactAddedItemReader)
+                .processor(contactAddedItemProcessor)
                 .faultTolerant()
                 .skip(RuntimeException.class)
                 .skipLimit(20)
@@ -100,15 +102,16 @@ public class LeadsFromSiteImportToCRM {
     }
 
     @Bean
-    public Job newLeadsFromSiteToCRMJob(
-            Step leadFromSiteAddToCRMStep
+    public Job newContactAddedProcessJob(
+            Step contactAddedProcessorStep
     ){
         RunIdIncrementer runIdIncrementer = new RunIdIncrementer();
 
-        return jobBuilderFactory.get("newLeadsFromSiteToCRMJob")
+        return jobBuilderFactory.get("newContactAddedProcessJob")
                 .incrementer(runIdIncrementer)
-                .flow(leadFromSiteAddToCRMStep)
+                .flow(contactAddedProcessorStep)
                 .end()
                 .build();
     }
+
 }

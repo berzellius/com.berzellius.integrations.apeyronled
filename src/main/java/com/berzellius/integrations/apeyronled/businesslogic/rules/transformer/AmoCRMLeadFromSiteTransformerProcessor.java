@@ -24,6 +24,10 @@ public class AmoCRMLeadFromSiteTransformerProcessor implements TransformerProces
         Assert.assertTrue("input object must be AmoCRMLead!", input instanceof AmoCRMLead);
         AmoCRMLead lead = (AmoCRMLead) input;
 
+        if(!this.getParams().containsKey("site")) {
+            return (T) lead;
+        }
+
         if(this.getParams().get("site") != null){
             Site site = (Site) this.getParams().get("site");
 
@@ -39,7 +43,27 @@ public class AmoCRMLeadFromSiteTransformerProcessor implements TransformerProces
             }
 
             if(site.getUrl().contains("opt.led-apeyron.ru")){
-                // todo - выбор тега в соответствии с рекламным движком
+
+                String marketingChannelName = (String) this.getParams().get("marketing_channel");
+                String searchEngine = (String) this.getParams().get("search_engine_name");
+                String utmSource = (String) this.getParams().get("utm_source");
+
+                if(
+                        marketingChannelName.contains("ндекс") ||
+                                searchEngine.contains("yandex") ||
+                                utmSource.contains("yandex")
+                        ){
+                    lead.tag(1l, "Я.Д.");
+                }
+
+                if(
+                        marketingChannelName.contains("oogle") ||
+                                searchEngine.contains("google") ||
+                                utmSource.contains("google")
+                        ){
+                    lead.tag(1l, "GA");
+                }
+
                 lead.setPipeline_id(446961l);
             }
         }
@@ -49,6 +73,7 @@ public class AmoCRMLeadFromSiteTransformerProcessor implements TransformerProces
 
     @Override
     public void setParams(HashMap<String, Object> params) {
+        this.params = params;
     }
 
     public HashMap<String, Object> getParams() {

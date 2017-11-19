@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.util.Arrays;
+
 /**
  * Created by berz on 11.01.2017.
  */
@@ -29,7 +31,7 @@ public class SimpleFieldValidationUtilImpl implements SimpleFieldsValidationUtil
                 }
 
                 if(!value.matches("^[\\d]+$")){
-                    log.error("value of type CALL_NUMBER:" + value + " has not pass validation because it containt not only digits");
+                    log.error("value of type CALL_NUMBER:" + value + " has not pass validation because it contain not only digits");
                     return false;
                 }
 
@@ -37,6 +39,10 @@ public class SimpleFieldValidationUtilImpl implements SimpleFieldsValidationUtil
 
             case EMAIL:
                 return true;
+            case NONRESTRICTED_MANAGER_MOBILE_PHONE:
+                String[] restricted = {"9265206172", "9265206181"};
+
+                return (Arrays.binarySearch(restricted, value) >= 0);
         }
 
         throw new ValidationException("parameters set to this function is wrong or it is unexpected error, you better call Saul..");

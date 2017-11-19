@@ -2,9 +2,11 @@ package com.berzellius.integrations.apeyronled.businesslogic.processes;
 
 import com.berzellius.integrations.apeyronled.businesslogic.rules.transformer.FieldsTransformer;
 import com.berzellius.integrations.apeyronled.dmodel.CallRecord;
+import com.berzellius.integrations.apeyronled.dmodel.ContactAdded;
 import com.berzellius.integrations.apeyronled.dmodel.TrackedCall;
 import com.berzellius.integrations.apeyronled.dto.site.*;
 import com.berzellius.integrations.apeyronled.repository.CallRecordRepository;
+import com.berzellius.integrations.apeyronled.repository.ContactAddedRepository;
 import com.berzellius.integrations.apeyronled.repository.TrackedCallRepository;
 import com.berzellius.integrations.apeyronled.scheduling.SchedulingService;
 import org.springframework.batch.core.JobParametersInvalidException;
@@ -30,6 +32,9 @@ public class  CallsServiceImpl implements CallsService {
 
     @Autowired
     TrackedCallRepository trackedCallRepository;
+
+    @Autowired
+    ContactAddedRepository contactAddedRepository;
 
     @Autowired
     FieldsTransformer fieldsTransformer;
@@ -105,6 +110,32 @@ public class  CallsServiceImpl implements CallsService {
             callRecordRepository.save(callRecords);
         }
 
+        return new Result("success");
+    }
+
+    @Override
+    public Result newContactsAddedInCRM(ContactsAddingRequest contactsAddingRequest) {
+        if(contactsAddingRequest.getAddedContacts().size() > 0){
+            for(ContactAddDTO contactAddDTO : contactsAddingRequest.getAddedContacts()){
+                ContactAdded contactAdded = new ContactAdded();
+                contactAdded.setState(ContactAdded.State.NEW);
+                contactAdded.setContactId(contactAddDTO.getContactId());
+
+                contactAddedRepository.save(contactAdded);
+            }
+
+            try {
+                schedulingService.runProcessingAddedContacts();
+            } catch (JobParametersInvalidException e) {
+                e.printStackTrace();
+            } catch (JobExecutionAlreadyRunningException e) {
+                e.printStackTrace();
+            } catch (JobRestartException e) {
+                e.printStackTrace();
+            } catch (JobInstanceAlreadyCompleteException e) {
+                e.printStackTrace();
+            }
+        }
         return new Result("success");
     }
 

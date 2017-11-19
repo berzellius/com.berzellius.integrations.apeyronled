@@ -12,6 +12,7 @@ import com.berzellius.integrations.apeyronled.dto.site.Result;
 import com.berzellius.integrations.apeyronled.repository.LeadFromSiteRepository;
 import com.berzellius.integrations.apeyronled.repository.SiteRepository;
 import com.berzellius.integrations.basic.exception.APIAuthException;
+import com.berzellius.integrations.comagicru.dto.sessioninfo.SessionInfo;
 import com.berzellius.integrations.comagicru.service.ComagicAPIService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -155,6 +156,7 @@ public class LeadFromSiteServiceImpl implements LeadsFromSiteService {
         AmoCRMContact amoCRMContact = new AmoCRMContact();
         amoCRMContact.setName(lead.getName() + " (с сайта " + lead.getOrigin() + ") :[" + contacts + "]");
         amoCRMContact.setResponsible_user_id(this.getDefaultUserID());
+        amoCRMContact.tag(this.getLeadFromSiteTagId(), "заявка с сайта");
 
         if(lead.getPhone() != null){
             String[] fieldNumber = {lead.getPhone()};
@@ -282,9 +284,31 @@ public class LeadFromSiteServiceImpl implements LeadsFromSiteService {
         String[] fieldSource = {sourceName};
         lead.addStringValuesToCustomField(this.getMarketingChannelLeadsCustomField(), fieldSource);
 
+        String marketingChannelName = "";
+        String searchEngineName = "";
+        String utmSource = "";
+
+        if(leadFromSite.getLead().getVisitor_id() != null){
+            marketingChannelName = comagicAPIService.getActiveAcByVisitorId(leadFromSite.getLead().getVisitor_id());
+        }
+
+        if(leadFromSite.getLead().getSession_id() != null){
+            ArrayList<SessionInfo> sessionInfos = comagicAPIService.getSessionInfoBySessionId(leadFromSite.getLead().getSession_id());
+            if(sessionInfos.size() > 0 && sessionInfos.get(0).getSearch_engine() != null){
+                searchEngineName = sessionInfos.get(0).getSearch_engine();
+            }
+
+            if(sessionInfos.size() > 0 && sessionInfos.get(0).getUtm_source() != null){
+                utmSource = sessionInfos.get(0).getUtm_source();
+            }
+        }
+
+        log.info("utmSource: " + utmSource);
+        log.info("searchEngine: " + searchEngineName);
+        log.info("marketingChannel: " + marketingChannelName);
 
         //lead.tag(this.getLeadFromSiteTagId(), "Заявка с сайта");
-        lead = this.transfromLeadFromSiteForChangePipelineAndTags(lead, leadFromSite);
+        lead = this.transfromLeadFromSiteForChangePipelineAndTags(lead, leadFromSite, marketingChannelName, searchEngineName, utmSource);
         // если в ходе трансформации ответственный не определен
         // если у контакта есть ответственный и он не является ответственным по умолчанию, ставим отвественного за контакт
         // иначе ставим пользователя по умолчанию
@@ -333,11 +357,17 @@ public class LeadFromSiteServiceImpl implements LeadsFromSiteService {
         return contact;
     }
 
-    protected AmoCRMLead transfromLeadFromSiteForChangePipelineAndTags(AmoCRMLead amoCRMLead, LeadFromSite leadFromSite){
+    protected AmoCRMLead transfromLeadFromSiteForChangePipelineAndTags(AmoCRMLead amoCRMLead, LeadFromSite leadFromSite, String marketingChannelName, String searchEngineName, String utmSource){
         HashMap<String, Object> params = new LinkedHashMap<>();
+        log.info("preparing to run transformer");
         if(leadFromSite.getSite() != null){
+            log.info("lead was from site#" + leadFromSite.getSite().getId());
             params.put("site", leadFromSite.getSite());
         }
+
+        params.put("marketing_channel", marketingChannelName);
+        params.put("search_engine_name", searchEngineName);
+        params.put("utm_source", utmSource);
 
         return fieldsTransformer.transform(
                 amoCRMLead,

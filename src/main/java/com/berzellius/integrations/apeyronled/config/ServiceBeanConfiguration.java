@@ -27,7 +27,6 @@ import java.util.Arrays;
 @Configuration
 public class ServiceBeanConfiguration {
 
-
     @Bean
     AmoCRMService amoCRMService(){
         AmoCRMService amoCRMService = new AmoCRMServiceImpl();
@@ -104,6 +103,7 @@ public class ServiceBeanConfiguration {
         incomingCallBusinessProcess.setPhoneNumberContactStockField(APISettings.AmoCRMPhoneNumberStockFieldContact);
         incomingCallBusinessProcess.setPhoneNumberStockFieldContactEnumWork(APISettings.AmoCRMPhoneNumberStockFieldContactEnumWork);
         incomingCallBusinessProcess.setSourceLeadsCustomField(APISettings.AmoCRMSourceLeadsCustomField);
+        incomingCallBusinessProcess.setSourceContactPhoneMobilePBX(APISettings.AmoCRMContacPhoneMobliePBX);
 
         return incomingCallBusinessProcess;
     }

@@ -2,10 +2,7 @@ package com.berzellius.integrations.apeyronled.web;
 
 import com.berzellius.integrations.apeyronled.businesslogic.processes.CallsService;
 import com.berzellius.integrations.apeyronled.businesslogic.processes.LeadsFromSiteService;
-import com.berzellius.integrations.apeyronled.dto.site.CallRecordRequest;
-import com.berzellius.integrations.apeyronled.dto.site.CallRequest;
-import com.berzellius.integrations.apeyronled.dto.site.LeadRequest;
-import com.berzellius.integrations.apeyronled.dto.site.Result;
+import com.berzellius.integrations.apeyronled.dto.site.*;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -68,6 +65,21 @@ public class RestController extends BaseController {
             CallRecordRequest callRecordRequest
     ){
         return callsService.newCallRecords(callRecordRequest);
+    }
+
+    @RequestMapping(
+            value = "contacts_add",
+            method = RequestMethod.POST,
+            consumes="application/json",
+            produces="application/json"
+    )
+    @ResponseBody
+    public Result newContactAdd(
+            @RequestBody
+            ContactsAddingRequest contactsAddingRequest
+    )
+    {
+        return  callsService.newContactsAddedInCRM(contactsAddingRequest);
     }
 }
 

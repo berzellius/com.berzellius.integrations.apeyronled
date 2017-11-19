@@ -60,6 +60,8 @@ public class CallRecordsToCRMBatchConfiguration {
         fromTime.set(Calendar.SECOND, 0);
         fromTime.set(Calendar.MILLISECOND, 0);
 
+        fromTime.add(Calendar.DAY_OF_YEAR, -2);
+
         System.out.println("records from date: " + fromTime.getTime());
 
         JpaPagingItemReader<CallRecord> reader = new JpaPagingItemReader<>();
