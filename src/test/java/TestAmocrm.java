@@ -1,7 +1,5 @@
-import com.berzellius.integrations.amocrmru.dto.api.amocrm.AmoCRMContact;
-import com.berzellius.integrations.amocrmru.dto.api.amocrm.AmoCRMCustomField;
-import com.berzellius.integrations.amocrmru.dto.api.amocrm.AmoCRMCustomFieldValue;
-import com.berzellius.integrations.amocrmru.dto.api.amocrm.AmoCRMLead;
+import com.berzellius.integrations.amocrmru.dto.api.amocrm.*;
+import com.berzellius.integrations.amocrmru.dto.api.amocrm.response.AmoCRMCreatedEntityResponse;
 import com.berzellius.integrations.amocrmru.service.AmoCRMService;
 import com.berzellius.integrations.apeyronled.TestApplication;
 import com.berzellius.integrations.apeyronled.businesslogic.processes.LeadsFromSiteService;
@@ -126,5 +124,23 @@ public class TestAmocrm {
         while(crmContacts != null);
 
         System.out.println(count + " contacts processed..");
+    }
+
+    @Test
+    public void createLead(){
+        AmoCRMLead lead = new AmoCRMLead();
+        lead.setName("Test new feat..1");
+
+
+
+        try {
+            AmoCRMCreatedEntityResponse crmCreatedEntityResponse = amoCRMService.addLead(lead);
+
+
+            //amoCRMService.addContactToLead(amoCRMService.getContactById(45803514l), amoCRMService.getLeadById(crmCreatedEntityResponse.getId()) );
+            amoCRMService.addContactToLead(amoCRMService.getContactById(45829520l), amoCRMService.getLeadById(crmCreatedEntityResponse.getId()) );
+        } catch (APIAuthException e) {
+            e.printStackTrace();
+        }
     }
 }

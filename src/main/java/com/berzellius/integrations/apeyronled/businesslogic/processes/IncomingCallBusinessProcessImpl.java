@@ -203,7 +203,10 @@ public class IncomingCallBusinessProcessImpl implements IncomingCallBusinessProc
     public void processAddedContact(ContactAdded contactAdded) throws APIAuthException {
         Assert.notNull(contactAdded.getContactId());
         
-        log.info("Started processing added contact#" . concat(contactAdded.getContactId().toString()));
+        log.info(
+                "Started processing " +
+                    ((contactAdded.getIsEditedOnly() != null && contactAdded.getIsEditedOnly())? "edited" : "added") +
+                        " contact#" . concat(contactAdded.getContactId().toString()));
         
         AmoCRMContact amoCRMContact = amoCRMService.getContactById(contactAdded.getContactId());
         if(amoCRMContact == null){
@@ -263,9 +266,19 @@ public class IncomingCallBusinessProcessImpl implements IncomingCallBusinessProc
             if(tag.getId().equals(this.getLeadFromSiteTagId())){
                 // Контакт тегирован как созданный из заявки с сайта. Ожидаем, что сделка будет создана обработкой заявки
                 log.info("Leads absent, but this is contact from site. Wait lead to be created");
+                contactAdded.setState(ContactAdded.State.DONE);
+                contactAddedRepository.save(contactAdded);
                 return;
             }
         }
+
+        if(contactAdded.getIsEditedOnly() != null && contactAdded.getIsEditedOnly()){
+            // контакт только редактировался, не нужно создавать ему сделку
+            log.info("Leads not found! This is just editing of contact, then we dont need to create Lead");
+
+            return;
+        }
+
 
         log.info("Leads not found! Creating lead.. (from added Contact)");
 
@@ -286,6 +299,9 @@ public class IncomingCallBusinessProcessImpl implements IncomingCallBusinessProc
         AmoCRMLead amoCRMLead1 = amoCRMService.getLeadById(amoCRMCreatedEntityResponse.getId());
         log.info("Adding contact #" + amoCRMContact.getId() + " to lead #" + amoCRMLead1.getId());
         amoCRMService.addContactToLead(amoCRMContact, amoCRMLead1);
+
+        contactAdded.setState(ContactAdded.State.DONE);
+        contactAddedRepository.save(contactAdded);
     }
 
     protected void checkContactAndLeadEqualResponsibleUser(AmoCRMContact crmContact, AmoCRMLead crmLead) throws APIAuthException {

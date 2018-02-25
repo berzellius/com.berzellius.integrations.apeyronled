@@ -1,5 +1,7 @@
 package com.berzellius.integrations.apeyronled.scheduling;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.JobParametersInvalidException;
@@ -10,6 +12,7 @@ import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -28,6 +31,12 @@ public class SchedulingServiceImpl implements SchedulingService {
 
     @Autowired
     JobLauncher jobLauncher;
+
+    protected Long addedContactsMinDelay = 2000l;
+
+    protected Date lastAddedContactsProcessingStart = null;
+
+    private static final Logger log = LoggerFactory.getLogger(SchedulingService.class);
 
     @Override
     public void runLeadsFromSiteBatch() throws JobParametersInvalidException, JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException {
@@ -49,10 +58,37 @@ public class SchedulingServiceImpl implements SchedulingService {
 
     @Override
     public void runProcessingAddedContacts() throws JobParametersInvalidException, JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException {
-        JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
-        jobParametersBuilder.addDate("start", new Date());
+        this.runContactAddedProcessing();
+    }
 
-        System.out.println("START process Added Contacts to CRM!");
-        jobLauncher.run(newContactAddedProcessJob, jobParametersBuilder.toJobParameters());
+    private synchronized void runContactAddedProcessing() throws JobParametersInvalidException, JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        // время за addedContactsMinDelay милисекунд до текущего момента
+        calendar.add(Calendar.MILLISECOND, (-1) * this.addedContactsMinDelay.intValue());
+
+
+        if(
+                this.lastAddedContactsProcessingStart == null ||
+                        // если время после последнего запуска раньше времени calendar
+                        this.lastAddedContactsProcessingStart.before(calendar.getTime())
+                ){
+            log.info("Start batch processing for new added/edited contact");
+            JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
+            jobParametersBuilder.addDate("start", new Date());
+            jobLauncher.run(newContactAddedProcessJob, jobParametersBuilder.toJobParameters());
+
+            this.lastAddedContactsProcessingStart = new Date();
+        }
+        else{
+            // нужно подождать..
+            log.info("Wait for delay before starting processing for new added/edited contact again (last was in " + this.lastAddedContactsProcessingStart + " )");
+            try {
+                Thread.sleep(this.addedContactsMinDelay + 500l);
+                this.runProcessingAddedContacts();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

@@ -15,5 +15,5 @@ public interface CallsService {
 
     Result newCallRecords(CallRecordRequest callRecordRequest);
 
-    Result newContactsAddedInCRM(ContactsAddingRequest contactsAddingRequest);
+    Result newContactsAddedInCRM(ContactsAddingRequest contactsAddingRequest) throws InterruptedException;
 }

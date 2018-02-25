@@ -9,6 +9,8 @@ public class ContactsAddingRequest {
 
     protected List<ContactAddDTO> addedContacts;
 
+    protected List<ContactAddDTO> editedContacts;
+
     public ContactsAddingRequest() {
     }
 
@@ -18,5 +20,13 @@ public class ContactsAddingRequest {
 
     public void setAddedContacts(List<ContactAddDTO> addedContacts) {
         this.addedContacts = addedContacts;
+    }
+
+    public List<ContactAddDTO> getEditedContacts() {
+        return editedContacts;
+    }
+
+    public void setEditedContacts(List<ContactAddDTO> editedContacts) {
+        this.editedContacts = editedContacts;
     }
 }

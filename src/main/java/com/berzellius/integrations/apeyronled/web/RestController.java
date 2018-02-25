@@ -79,7 +79,11 @@ public class RestController extends BaseController {
             ContactsAddingRequest contactsAddingRequest
     )
     {
-        return  callsService.newContactsAddedInCRM(contactsAddingRequest);
+        try {
+            return  callsService.newContactsAddedInCRM(contactsAddingRequest);
+        } catch (InterruptedException e) {
+            return new Result("failed");
+        }
     }
 }
 

@@ -36,6 +36,9 @@ public class ContactAdded extends DModelEntity {
     @Enumerated(EnumType.STRING)
     protected State state;
 
+    @Column(name = "is_edited_only")
+    protected Boolean isEditedOnly;
+
     @Override
     public Long getId() {
         return id;
@@ -71,5 +74,13 @@ public class ContactAdded extends DModelEntity {
     @Override
     public String toString() {
         return "ContactAdded#".concat(this.getId().toString());
+    }
+
+    public Boolean getIsEditedOnly() {
+        return isEditedOnly;
+    }
+
+    public void setIsEditedOnly(Boolean isEditedOnly) {
+        this.isEditedOnly = isEditedOnly;
     }
 }

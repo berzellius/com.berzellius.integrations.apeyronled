@@ -9,6 +9,8 @@ import com.berzellius.integrations.apeyronled.repository.CallRecordRepository;
 import com.berzellius.integrations.apeyronled.repository.ContactAddedRepository;
 import com.berzellius.integrations.apeyronled.repository.TrackedCallRepository;
 import com.berzellius.integrations.apeyronled.scheduling.SchedulingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
@@ -41,6 +43,8 @@ public class  CallsServiceImpl implements CallsService {
 
     @Autowired
     CallRecordRepository callRecordRepository;
+
+    private static final Logger log = LoggerFactory.getLogger(CallsServiceImpl.class);
 
     private String transformPhone(String phone){
         String res = fieldsTransformer.transform(phone, FieldsTransformer.Transformation.CALL_NUMBER_COMMON);
@@ -114,11 +118,22 @@ public class  CallsServiceImpl implements CallsService {
     }
 
     @Override
-    public Result newContactsAddedInCRM(ContactsAddingRequest contactsAddingRequest) {
-        if(contactsAddingRequest.getAddedContacts().size() > 0){
+    public Result newContactsAddedInCRM(ContactsAddingRequest contactsAddingRequest) throws InterruptedException {
+
+        if(contactsAddingRequest.getAddedContacts().size() > 0 || contactsAddingRequest.getEditedContacts().size() > 0){
+            log.info("Adding new ContactAdded entities..");
             for(ContactAddDTO contactAddDTO : contactsAddingRequest.getAddedContacts()){
                 ContactAdded contactAdded = new ContactAdded();
                 contactAdded.setState(ContactAdded.State.NEW);
+                contactAdded.setContactId(contactAddDTO.getContactId());
+
+                contactAddedRepository.save(contactAdded);
+            }
+
+            for(ContactAddDTO contactAddDTO : contactsAddingRequest.getEditedContacts()){
+                ContactAdded contactAdded = new ContactAdded();
+                contactAdded.setState(ContactAdded.State.NEW);
+                contactAdded.setIsEditedOnly(true);
                 contactAdded.setContactId(contactAddDTO.getContactId());
 
                 contactAddedRepository.save(contactAdded);
